@@ -223,18 +223,3 @@ python rl_optimization/station_placement_rl.py
 - OpenStreetMap for road network data
 
 ---
-
-**Note:** This is a class project for Design of Smart Cities. Research components are simplified for educational purposes.
-
-## 📄 Paper Submission Safety
-
-This code is a **simplified educational version** for a class project. It uses standard Multi-Armed Bandit algorithms (UCB, Epsilon-Greedy) which are publicly available methods in reinforcement learning literature.
-
-**Key Points:**
-- ✅ Safe to publish before research paper submission
-- ✅ Different implementation (400 lines vs 2000+ in research)
-- ✅ Standard algorithms (not proprietary)
-- ✅ Clear distinction from research work
-
-See `PAPER_SUBMISSION_SAFETY.md` for detailed analysis.
-
