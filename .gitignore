@@ -11,6 +11,8 @@ ENV/
 .history/
 # Results and generated files
 results/
+visualization/figures/
+*.zip
 *.png
 *.pdf
 *.html
