@@ -131,7 +131,17 @@ class EVNavigationHardware:
                             time.sleep(0.01)
                         
                         GPIO.output(row, GPIO.HIGH)  # Reset row
-                        return key
+                        
+                        # Key remapping: Map letter keys to numbers for menu navigation
+                        # Since first row (1,2,3,A) doesn't work, use alternative mappings
+                        # B->4, C->5, D->6, *->7 for menu options
+                        key_map = {
+                            'B': '4',  # B key for option 1 (Find Station)
+                            'C': '5',  # C key for option 2 (Navigate)
+                            'D': '6',  # D key for option 3 (Status)
+                            '*': '7'   # * key for option 4 (Exit)
+                        }
+                        return key_map.get(key, key)  # Return mapped key or original
                 
                 GPIO.output(row, GPIO.HIGH)  # Reset row
             

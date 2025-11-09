@@ -87,14 +87,17 @@ class EVNavigationSystem:
     def main_menu(self):
         """Display and handle main menu"""
         while True:
-            self.hardware.display_message("EV Navigation\n1:Find Station\n2:Navigate\n3:Status\n4:Exit")
+            # Use keys 4,5,6,7 since first row (1,2,3,A) doesn't work
+            self.hardware.display_message("EV Navigation\n4:Find Station\n5:Navigate\n6:Status\n7:Exit")
             
             choice = None
             timeout = time.time() + 30  # 30 second timeout
             
             while choice is None and time.time() < timeout:
                 key = self.hardware.read_keypad()
-                if key and key in ['1', '2', '3', '4']:
+                # Accept both number keys and letter keys as alternatives
+                # 4 or B -> Find Station, 5 or C -> Navigate, 6 or D -> Status, 7 or * -> Exit
+                if key and key in ['4', '5', '6', '7', 'B', 'C', 'D', '*']:
                     choice = key
                     break
                 time.sleep(0.1)
@@ -104,13 +107,14 @@ class EVNavigationSystem:
                 time.sleep(2)
                 continue
             
-            if choice == '1':
+            # Map keys to menu options
+            if choice in ['4', 'B']:
                 self.find_station()
-            elif choice == '2':
+            elif choice in ['5', 'C']:
                 self.start_navigation()
-            elif choice == '3':
+            elif choice in ['6', 'D']:
                 self.show_status()
-            elif choice == '4':
+            elif choice in ['7', '*']:
                 self.hardware.display_message("Shutting down\nGoodbye!")
                 time.sleep(2)
                 break
