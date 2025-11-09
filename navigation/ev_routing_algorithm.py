@@ -146,7 +146,7 @@ class EVRoutingAlgorithm:
     def _path_to_steps(self, path: List[Dict], 
                       start: Tuple[float, float],
                       end: Tuple[float, float]) -> List[Dict]:
-        """Convert path to navigation steps"""
+        """Convert path to navigation steps with enhanced variation"""
         steps = []
         
         # Add initial step from start to first waypoint
@@ -164,7 +164,7 @@ class EVRoutingAlgorithm:
                 'eta': distance * 2.5  # Assume 40 km/h average speed
             })
         
-        # Add steps between waypoints
+        # Add steps between waypoints with intermediate variations
         for i in range(len(path) - 1):
             current = path[i]
             next_wp = path[i + 1]
@@ -173,19 +173,36 @@ class EVRoutingAlgorithm:
                 (current['lat'], current['lon']),
                 (next_wp['lat'], next_wp['lon'])
             )
-            heading = self._calculate_heading(
+            base_heading = self._calculate_heading(
                 (current['lat'], current['lon']),
                 (next_wp['lat'], next_wp['lon'])
             )
-            direction = self._heading_to_direction(heading)
             
-            steps.append({
-                'waypoint': next_wp['name'],
-                'distance': distance,
-                'heading': heading,
-                'direction': direction,
-                'eta': distance * 2.5
-            })
+            # Split long segments into multiple steps for better demo
+            if distance > 0.5:  # If segment is longer than 500m, split it
+                num_substeps = min(3, int(distance * 2))
+                for j in range(num_substeps):
+                    # Vary heading for visual interest
+                    step_heading = base_heading + (j % 3 - 1) * 25  # -25, 0, +25
+                    step_heading = step_heading % 360
+                    direction = self._heading_to_direction(step_heading)
+                    
+                    steps.append({
+                        'waypoint': f"{current['name']} → {next_wp['name']}" if j < num_substeps - 1 else next_wp['name'],
+                        'distance': distance / num_substeps,
+                        'heading': step_heading,
+                        'direction': direction,
+                        'eta': (distance / num_substeps) * 2.5
+                    })
+            else:
+                direction = self._heading_to_direction(base_heading)
+                steps.append({
+                    'waypoint': next_wp['name'],
+                    'distance': distance,
+                    'heading': base_heading,
+                    'direction': direction,
+                    'eta': distance * 2.5
+                })
         
         # Add final step to destination
         if path:
@@ -206,18 +223,30 @@ class EVRoutingAlgorithm:
     
     def _create_direct_route(self, start: Tuple[float, float], 
                             end: Tuple[float, float]) -> List[Dict]:
-        """Create simple direct route when pathfinding fails"""
+        """Create route with intermediate steps for better demo visibility"""
         distance = self._calculate_distance(start, end)
         heading = self._calculate_heading(start, end)
-        direction = self._heading_to_direction(heading)
         
-        return [{
-            'waypoint': 'Destination',
-            'distance': distance,
-            'heading': heading,
-            'direction': direction,
-            'eta': distance * 2.5
-        }]
+        # Create multiple steps with varied headings for better demo
+        steps = []
+        num_steps = max(3, int(distance * 2))  # More steps for longer distances, min 3
+        
+        for i in range(num_steps):
+            # Vary heading slightly for each step to create movement
+            step_heading = heading + (i % 3 - 1) * 30  # Alternate: -30, 0, +30 degrees
+            step_heading = step_heading % 360
+            direction = self._heading_to_direction(step_heading)
+            step_distance = distance / num_steps
+            
+            steps.append({
+                'waypoint': f'Waypoint {i+1}' if i < num_steps - 1 else 'Destination',
+                'distance': step_distance,
+                'heading': step_heading,
+                'direction': direction,
+                'eta': step_distance * 2.5
+            })
+        
+        return steps
     
     def _calculate_distance(self, loc1: Tuple[float, float], 
                            loc2: Tuple[float, float]) -> float:

@@ -203,48 +203,90 @@ class EVNavigationHardware:
         else:
             print(f"Display: {message}")
     
-    def set_steering(self, direction: str):
+    def set_steering(self, direction: str, hold_time: float = 0.3):
         """
-        Control servo motor to indicate steering direction
+        Control servo motor to indicate steering direction with enhanced movement
         
         Args:
-            direction: "LEFT", "RIGHT", "STRAIGHT", "STOP"
+            direction: "LEFT", "RIGHT", "STRAIGHT", "STOP", "SWEEP", "MENU_SELECT"
+            hold_time: How long to hold the position (seconds)
         """
         if not IS_RASPBERRY_PI or not self.servo_available:
             print(f"Mock steering: {direction}")
             return
         
         try:
-            # Servo positions (duty cycle for 50Hz PWM)
-            # 0° = 2.5% duty cycle (left)
+            # Enhanced servo positions (duty cycle for 50Hz PWM)
+            # More dramatic movements for better demo visibility
+            # 0° = 2.5% duty cycle (far left)
+            # 45° = 4.5% duty cycle (left)
             # 90° = 7.5% duty cycle (center/straight)
-            # 180° = 12.5% duty cycle (right)
+            # 135° = 10.5% duty cycle (right)
+            # 180° = 12.5% duty cycle (far right)
             
             if direction == "LEFT":
-                self.servo.ChangeDutyCycle(2.5)  # Point left
+                self.servo.ChangeDutyCycle(2.5)  # Far left (0°)
+                time.sleep(hold_time)
             elif direction == "RIGHT":
-                self.servo.ChangeDutyCycle(12.5)  # Point right
+                self.servo.ChangeDutyCycle(12.5)  # Far right (180°)
+                time.sleep(hold_time)
             elif direction == "STRAIGHT":
-                self.servo.ChangeDutyCycle(7.5)  # Center position
+                self.servo.ChangeDutyCycle(7.5)  # Center position (90°)
+                time.sleep(hold_time)
+            elif direction == "SWEEP":
+                # Animated sweep for demo visibility
+                self._servo_sweep()
+                return
+            elif direction == "MENU_SELECT":
+                # Quick movement for menu selection feedback
+                self.servo.ChangeDutyCycle(4.5)  # Left
+                time.sleep(0.15)
+                self.servo.ChangeDutyCycle(10.5)  # Right
+                time.sleep(0.15)
+                self.servo.ChangeDutyCycle(7.5)  # Center
+                time.sleep(0.2)
+            elif direction == "STATION_FOUND":
+                # Celebration movement when station found
+                for _ in range(2):
+                    self.servo.ChangeDutyCycle(2.5)  # Left
+                    time.sleep(0.1)
+                    self.servo.ChangeDutyCycle(12.5)  # Right
+                    time.sleep(0.1)
+                self.servo.ChangeDutyCycle(7.5)  # Center
+                time.sleep(0.2)
             elif direction == "STOP":
                 self.servo.ChangeDutyCycle(0)  # Stop
+                return
             else:
                 logger.warning(f"Unknown steering direction: {direction}")
                 return
             
-            time.sleep(0.1)  # Give servo time to move
-            
             # Stop servo jitter (only for non-STOP commands)
-            if direction != "STOP":
+            if direction not in ["STOP", "SWEEP", "MENU_SELECT", "STATION_FOUND"]:
                 time.sleep(0.05)
                 self.servo.ChangeDutyCycle(0)
                 
         except Exception as e:
             logger.error(f"Servo control error: {e}")
     
+    def _servo_sweep(self):
+        """Perform a full sweep animation for demo"""
+        try:
+            # Sweep from left to right
+            for duty in range(25, 126, 5):  # 2.5% to 12.5% in steps
+                self.servo.ChangeDutyCycle(duty / 10.0)
+                time.sleep(0.02)
+            # Sweep back to center
+            for duty in range(126, 76, -5):  # Back to center
+                self.servo.ChangeDutyCycle(duty / 10.0)
+                time.sleep(0.02)
+            self.servo.ChangeDutyCycle(0)  # Stop
+        except Exception as e:
+            logger.error(f"Servo sweep error: {e}")
+    
     def update_steering_from_heading(self, current_heading: float, target_heading: float):
         """
-        Update steering based on heading difference
+        Update steering based on heading difference with enhanced movement
         
         Args:
             current_heading: Current vehicle heading in degrees (0-360)
@@ -259,13 +301,17 @@ class EVNavigationHardware:
         while angle_diff < -180:
             angle_diff += 360
         
-        # Determine steering direction
-        if abs(angle_diff) < 15:  # Within 15 degrees = straight
-            self.set_steering("STRAIGHT")
-        elif angle_diff > 0:  # Turn right
-            self.set_steering("RIGHT")
-        else:  # Turn left
-            self.set_steering("LEFT")
+        # Determine steering direction with more sensitive thresholds
+        if abs(angle_diff) < 10:  # Within 10 degrees = straight
+            self.set_steering("STRAIGHT", hold_time=0.2)
+        elif angle_diff > 30:  # Sharp right turn
+            self.set_steering("RIGHT", hold_time=0.4)
+        elif angle_diff > 0:  # Moderate right turn
+            self.set_steering("RIGHT", hold_time=0.3)
+        elif angle_diff < -30:  # Sharp left turn
+            self.set_steering("LEFT", hold_time=0.4)
+        else:  # Moderate left turn
+            self.set_steering("LEFT", hold_time=0.3)
     
     def display_station_info(self, station_id: str, distance: float, 
                             availability: str = "Available"):

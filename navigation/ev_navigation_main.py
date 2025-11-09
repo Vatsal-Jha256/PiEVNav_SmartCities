@@ -107,15 +107,19 @@ class EVNavigationSystem:
                 time.sleep(2)
                 continue
             
-            # Map keys to menu options
+            # Map keys to menu options with servo feedback
             if choice in ['4', 'B']:
+                self.hardware.set_steering("MENU_SELECT")  # Visual feedback
                 self.find_station()
             elif choice in ['5', 'C']:
+                self.hardware.set_steering("MENU_SELECT")  # Visual feedback
                 self.start_navigation()
             elif choice in ['6', 'D']:
+                self.hardware.set_steering("MENU_SELECT")  # Visual feedback
                 self.show_status()
             elif choice in ['7', '*']:
                 self.hardware.display_message("Shutting down\nGoodbye!")
+                self.hardware.set_steering("STOP")
                 time.sleep(2)
                 break
     
@@ -136,6 +140,9 @@ class EVNavigationSystem:
                 (nearest['lat'], nearest['lon'])
             )
             
+            # Servo feedback when station found
+            self.hardware.set_steering("STATION_FOUND")
+            
             self.hardware.display_station_info(
                 nearest['station_id'],
                 distance,
@@ -151,6 +158,8 @@ class EVNavigationSystem:
                 if key == '#':
                     self.destination_station = nearest
                     self.hardware.display_message("Navigation\nstarting...")
+                    # Servo sweep animation when starting navigation
+                    self.hardware.set_steering("SWEEP")
                     time.sleep(1)
                     self.start_navigation()
                     return
@@ -183,6 +192,8 @@ class EVNavigationSystem:
         self.navigation_active = True
         
         self.hardware.display_message("Navigation\nActive\nStarting route...")
+        # Initial servo position for navigation
+        self.hardware.set_steering("STRAIGHT")
         time.sleep(2)
         
         # Navigation loop
@@ -190,7 +201,7 @@ class EVNavigationSystem:
     
     def _navigation_loop(self):
         """Main navigation loop"""
-        update_interval = 2.0  # Update every 2 seconds
+        update_interval = 1.5  # Update more frequently for better demo (1.5 seconds)
         last_update = time.time()
         
         while self.navigation_active:
@@ -202,8 +213,9 @@ class EVNavigationSystem:
             
             # Check for stop command
             key = self.hardware.read_keypad()
-            if key == '*':
+            if key in ['*', '7']:  # Exit key
                 self.hardware.display_message("Navigation\nstopped")
+                self.hardware.set_steering("STOP")
                 time.sleep(1)
                 self.navigation_active = False
                 break
