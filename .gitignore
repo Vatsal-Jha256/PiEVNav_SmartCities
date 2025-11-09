@@ -8,7 +8,7 @@ env/
 venv/
 ENV/
 .venv
-
+.history/
 # Results and generated files
 results/
 *.png
@@ -21,6 +21,7 @@ results/
 .idea/
 *.swp
 *.swo
+.history/
 
 # OS
 .DS_Store
