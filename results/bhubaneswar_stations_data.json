@@ -1,0 +1,182 @@
+{
+  "city": "Bhubaneswar",
+  "total_stations": 25,
+  "stations": [
+    {
+      "station_id": "ST01",
+      "lat": 20.2961,
+      "lon": 85.8245,
+      "name": "City Center",
+      "type": "strategic"
+    },
+    {
+      "station_id": "ST02",
+      "lat": 20.2644,
+      "lon": 85.8281,
+      "name": "Acharya Vihar",
+      "type": "strategic"
+    },
+    {
+      "station_id": "ST03",
+      "lat": 20.31,
+      "lon": 85.85,
+      "name": "Patia",
+      "type": "strategic"
+    },
+    {
+      "station_id": "ST04",
+      "lat": 20.28,
+      "lon": 85.8,
+      "name": "Old Town",
+      "type": "strategic"
+    },
+    {
+      "station_id": "ST05",
+      "lat": 20.32,
+      "lon": 85.82,
+      "name": "Nayapalli",
+      "type": "strategic"
+    },
+    {
+      "station_id": "ST06",
+      "lat": 20.25,
+      "lon": 85.85,
+      "name": "Bhubaneswar Railway Station",
+      "type": "strategic"
+    },
+    {
+      "station_id": "ST07",
+      "lat": 20.3,
+      "lon": 85.88,
+      "name": "Airport Area",
+      "type": "strategic"
+    },
+    {
+      "station_id": "ST08",
+      "lat": 20.27,
+      "lon": 85.78,
+      "name": "Lingaraj Temple Area",
+      "type": "strategic"
+    },
+    {
+      "station_id": "ST09",
+      "lat": 20.29,
+      "lon": 85.86,
+      "name": "Infocity",
+      "type": "strategic"
+    },
+    {
+      "station_id": "ST10",
+      "lat": 20.31,
+      "lon": 85.79,
+      "name": "Vani Vihar",
+      "type": "strategic"
+    },
+    {
+      "station_id": "ST11",
+      "lat": 20.22785931817127,
+      "lon": 85.72819857841708,
+      "name": "Grid Station 11",
+      "type": "grid"
+    },
+    {
+      "station_id": "ST12",
+      "lat": 20.232531595393446,
+      "lon": 85.77332410640622,
+      "name": "Grid Station 12",
+      "type": "grid"
+    },
+    {
+      "station_id": "ST13",
+      "lat": 20.235730252478223,
+      "lon": 85.79801672940559,
+      "name": "Grid Station 13",
+      "type": "grid"
+    },
+    {
+      "station_id": "ST14",
+      "lat": 20.227040887472462,
+      "lon": 85.83675609119499,
+      "name": "Grid Station 14",
+      "type": "grid"
+    },
+    {
+      "station_id": "ST15",
+      "lat": 20.231800605352646,
+      "lon": 85.86957688006073,
+      "name": "Grid Station 15",
+      "type": "grid"
+    },
+    {
+      "station_id": "ST16",
+      "lat": 20.237911308120285,
+      "lon": 85.9216457524384,
+      "name": "Grid Station 16",
+      "type": "grid"
+    },
+    {
+      "station_id": "ST17",
+      "lat": 20.26640870627148,
+      "lon": 85.73938381834783,
+      "name": "Grid Station 17",
+      "type": "grid"
+    },
+    {
+      "station_id": "ST18",
+      "lat": 20.255704882769038,
+      "lon": 85.7616044827594,
+      "name": "Grid Station 18",
+      "type": "grid"
+    },
+    {
+      "station_id": "ST19",
+      "lat": 20.262718874822543,
+      "lon": 85.79768279082106,
+      "name": "Grid Station 19",
+      "type": "grid"
+    },
+    {
+      "station_id": "ST20",
+      "lat": 20.265157508078822,
+      "lon": 85.84236796934147,
+      "name": "Grid Station 20",
+      "type": "grid"
+    },
+    {
+      "station_id": "ST21",
+      "lat": 20.255108828256486,
+      "lon": 85.88764958628124,
+      "name": "Grid Station 21",
+      "type": "grid"
+    },
+    {
+      "station_id": "ST22",
+      "lat": 20.255837113836336,
+      "lon": 85.9218580582378,
+      "name": "Grid Station 22",
+      "type": "grid"
+    },
+    {
+      "station_id": "ST23",
+      "lat": 20.293999497570503,
+      "lon": 85.73266374926122,
+      "name": "Grid Station 23",
+      "type": "grid"
+    },
+    {
+      "station_id": "ST24",
+      "lat": 20.280741270636685,
+      "lon": 85.77683372652123,
+      "name": "Grid Station 24",
+      "type": "grid"
+    },
+    {
+      "station_id": "ST25",
+      "lat": 20.29097172296505,
+      "lon": 85.80548177058415,
+      "name": "Grid Station 25",
+      "type": "grid"
+    }
+  ],
+  "grid_cells": 644
+}

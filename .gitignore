@@ -11,12 +11,14 @@ ENV/
 .history/
 # Results and generated files
 results/
+!results/bhubaneswar_stations_data.json
 visualization/figures/
 *.zip
 *.png
 *.pdf
 *.html
 *.json
+!results/*.json
 
 # IDE
 .vscode/
