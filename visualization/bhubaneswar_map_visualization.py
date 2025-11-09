@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from typing import List, Dict, Tuple
 import logging
+import requests
 
 # Add project root to path
 sys.path.append(os.path.abspath('.'))
@@ -23,11 +24,23 @@ except ImportError:
     print("⚠️ Folium not available. Will create static map only.")
 
 try:
-    from modules.utils.gridding import CityGridding
-    from evaluation.microplacement_validation.visualization import ChargingStationVisualizer
-except ImportError as e:
-    print(f"⚠️ Could not import modules: {e}")
-    print("Creating standalone visualization...")
+    import contextily as ctx
+    CONTEXTILY_AVAILABLE = True
+except ImportError:
+    CONTEXTILY_AVAILABLE = False
+    print("⚠️ Contextily not available. Will use enhanced background.")
+
+try:
+    # Try importing from root level modules
+    from gridding import CityGridding
+    GRIDDING_AVAILABLE = True
+except ImportError:
+    try:
+        from modules.utils.gridding import CityGridding
+        GRIDDING_AVAILABLE = True
+    except ImportError:
+        GRIDDING_AVAILABLE = False
+        print("⚠️ CityGridding not available. Will use manual grid creation.")
 
 # Bhubaneswar coordinates (approximate city center)
 BHUBANESWAR_CENTER = (20.2961, 85.8245)  # (lat, lon)
@@ -135,65 +148,66 @@ def create_bhubaneswar_grid(city_name: str = "Bhubaneswar",
     Returns:
         List of grid cell dictionaries
     """
-    try:
-        gridder = CityGridding(primary_grid_size_km=grid_size_km, 
-                              fetch_osm_features=False)
-        
-        # Use coordinates for Bhubaneswar
-        grid_cells = gridder.create_city_grid(
-            city_name=city_name,
-            coordinates=(BHUBANESWAR_CENTER[0], BHUBANESWAR_CENTER[1])
-        )
-        
-        logger.info(f"✅ Created {len(grid_cells)} grid cells for {city_name}")
-        return grid_cells
-        
-    except Exception as e:
-        logger.warning(f"⚠️ Could not create grid using CityGridding: {e}")
-        logger.info("Creating manual grid...")
-        
-        # Fallback: Create manual grid
-        grid_cells = []
-        lat_range = BHUBANESWAR_BOUNDS['max_lat'] - BHUBANESWAR_BOUNDS['min_lat']
-        lon_range = BHUBANESWAR_BOUNDS['max_lon'] - BHUBANESWAR_BOUNDS['min_lon']
-        
-        # Approximate grid size in degrees (1km ≈ 0.009 degrees)
-        grid_size_deg = grid_size_km * 0.009
-        
-        num_lat = int(np.ceil(lat_range / grid_size_deg))
-        num_lon = int(np.ceil(lon_range / grid_size_deg))
-        
-        grid_id = 0
-        for i in range(num_lat):
-            for j in range(num_lon):
-                min_lat = BHUBANESWAR_BOUNDS['min_lat'] + i * grid_size_deg
-                max_lat = min(BHUBANESWAR_BOUNDS['min_lat'] + (i + 1) * grid_size_deg, 
-                             BHUBANESWAR_BOUNDS['max_lat'])
-                min_lon = BHUBANESWAR_BOUNDS['min_lon'] + j * grid_size_deg
-                max_lon = min(BHUBANESWAR_BOUNDS['min_lon'] + (j + 1) * grid_size_deg,
-                             BHUBANESWAR_BOUNDS['max_lon'])
-                
-                grid_cells.append({
-                    'grid_id': f'grid_{grid_id:03d}',
-                    'cell_id': f'grid_{grid_id:03d}',
-                    'min_lat': min_lat,
-                    'max_lat': max_lat,
-                    'min_lon': min_lon,
-                    'max_lon': max_lon,
-                    'center_lat': (min_lat + max_lat) / 2,
-                    'center_lon': (min_lon + max_lon) / 2,
-                    'area_km2': grid_size_km ** 2,
-                    'corners': [
-                        [min_lon, min_lat],
-                        [min_lon, max_lat],
-                        [max_lon, max_lat],
-                        [max_lon, min_lat]
-                    ]
-                })
-                grid_id += 1
-        
-        logger.info(f"✅ Created {len(grid_cells)} manual grid cells")
-        return grid_cells
+    if GRIDDING_AVAILABLE:
+        try:
+            gridder = CityGridding(primary_grid_size_km=grid_size_km, 
+                                  fetch_osm_features=False)
+            
+            # Use coordinates for Bhubaneswar
+            grid_cells = gridder.create_city_grid(
+                city_name=city_name,
+                coordinates=(BHUBANESWAR_CENTER[0], BHUBANESWAR_CENTER[1])
+            )
+            
+            logger.info(f"✅ Created {len(grid_cells)} grid cells for {city_name} using CityGridding")
+            return grid_cells
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Could not create grid using CityGridding: {e}")
+            logger.info("Creating manual grid...")
+    
+    # Fallback: Create manual grid
+    grid_cells = []
+    lat_range = BHUBANESWAR_BOUNDS['max_lat'] - BHUBANESWAR_BOUNDS['min_lat']
+    lon_range = BHUBANESWAR_BOUNDS['max_lon'] - BHUBANESWAR_BOUNDS['min_lon']
+    
+    # Approximate grid size in degrees (1km ≈ 0.009 degrees)
+    grid_size_deg = grid_size_km * 0.009
+    
+    num_lat = int(np.ceil(lat_range / grid_size_deg))
+    num_lon = int(np.ceil(lon_range / grid_size_deg))
+    
+    grid_id = 0
+    for i in range(num_lat):
+        for j in range(num_lon):
+            min_lat = BHUBANESWAR_BOUNDS['min_lat'] + i * grid_size_deg
+            max_lat = min(BHUBANESWAR_BOUNDS['min_lat'] + (i + 1) * grid_size_deg, 
+                         BHUBANESWAR_BOUNDS['max_lat'])
+            min_lon = BHUBANESWAR_BOUNDS['min_lon'] + j * grid_size_deg
+            max_lon = min(BHUBANESWAR_BOUNDS['min_lon'] + (j + 1) * grid_size_deg,
+                         BHUBANESWAR_BOUNDS['max_lon'])
+            
+            grid_cells.append({
+                'grid_id': f'grid_{grid_id:03d}',
+                'cell_id': f'grid_{grid_id:03d}',
+                'min_lat': min_lat,
+                'max_lat': max_lat,
+                'min_lon': min_lon,
+                'max_lon': max_lon,
+                'center_lat': (min_lat + max_lat) / 2,
+                'center_lon': (min_lon + max_lon) / 2,
+                'area_km2': grid_size_km ** 2,
+                'corners': [
+                    [min_lon, min_lat],
+                    [min_lon, max_lat],
+                    [max_lon, max_lat],
+                    [max_lon, min_lat]
+                ]
+            })
+            grid_id += 1
+    
+    logger.info(f"✅ Created {len(grid_cells)} manual grid cells")
+    return grid_cells
 
 
 def create_static_map(stations: List[Dict], 
@@ -210,7 +224,7 @@ def create_static_map(stations: List[Dict],
     Returns:
         Path to saved visualization
     """
-    logger.info("📊 Creating static map visualization...")
+    logger.info("📊 Creating static map visualization with proper overlay...")
     
     # Set up matplotlib with publication quality
     plt.style.use('default')
@@ -221,12 +235,89 @@ def create_static_map(stations: List[Dict],
     ax.set_xlim(bounds['min_lon'], bounds['max_lon'])
     ax.set_ylim(bounds['min_lat'], bounds['max_lat'])
     
-    # Add background color
-    ax.set_facecolor('#e6f3ff')
+    # Try to add map background overlay using contextily
+    map_background_added = False
     
-    # Add grid cells if provided
+    if CONTEXTILY_AVAILABLE:
+        try:
+            # Test internet connectivity first
+            try:
+                requests.get('https://tile.openstreetmap.org', timeout=3)
+                internet_available = True
+            except:
+                internet_available = False
+                logger.warning("⚠️ No internet connection - using enhanced background")
+            
+            if internet_available:
+                # Try different contextily providers
+                map_sources = [
+                    ('OpenStreetMap Mapnik', ctx.providers.OpenStreetMap.Mapnik),
+                    ('CartoDB Positron', ctx.providers.CartoDB.Positron),
+                    ('CartoDB DarkMatter', ctx.providers.CartoDB.DarkMatter),
+                ]
+                
+                # Add Stamen providers if available
+                try:
+                    map_sources.extend([
+                        ('Stamen Terrain', ctx.providers.Stamen.Terrain),
+                        ('Stamen TonerLite', ctx.providers.Stamen.TonerLite),
+                    ])
+                except AttributeError:
+                    logger.debug("Stamen providers not available")
+                
+                for source_name, source in map_sources:
+                    try:
+                        ctx.add_basemap(ax, crs='EPSG:4326', source=source, 
+                                      alpha=0.6, zorder=0, attribution=False)
+                        logger.info(f"✅ Added map background using {source_name}")
+                        map_background_added = True
+                        break
+                    except Exception as e:
+                        logger.debug(f"Could not add map background: {source_name} - {e}")
+                        continue
+        except Exception as e:
+            logger.debug(f"Map background error: {e}")
+    
+    # Enhanced fallback background if no map was added
+    if not map_background_added:
+        logger.info("🔄 Using enhanced fallback background")
+        ax.set_facecolor('#e6f3ff')
+        
+        # Add subtle gradient effect to simulate terrain
+        x = np.linspace(bounds['min_lon'], bounds['max_lon'], 100)
+        y = np.linspace(bounds['min_lat'], bounds['max_lat'], 100)
+        X, Y = np.meshgrid(x, y)
+        
+        # Create a subtle terrain-like pattern
+        Z = np.sin(X * 50) * np.cos(Y * 50) * 0.1
+        ax.contourf(X, Y, Z, levels=20, alpha=0.1, cmap='terrain', zorder=0)
+        
+        # Add subtle grid lines
+        ax.grid(True, alpha=0.2, color='#2E8B57', linestyle='-', linewidth=0.3)
+        
+        # Add map-like elements
+        ax.text(0.02, 0.98, 'Bhubaneswar, Odisha', transform=ax.transAxes, 
+            fontsize=14, alpha=0.9, verticalalignment='top', fontweight='bold',
+            bbox=dict(boxstyle="round,pad=0.5", facecolor='white', alpha=0.95, 
+                    edgecolor='#2E8B57', linewidth=2))
+        
+        # Add coordinate labels
+        ax.text(0.02, 0.02, 'Geographic Coordinates (WGS84)', transform=ax.transAxes, 
+            fontsize=11, alpha=0.7, verticalalignment='bottom',
+            style='italic', color='#2E8B57')
+        
+        # Add border
+        for spine in ax.spines.values():
+            spine.set_edgecolor('#2E8B57')
+            spine.set_linewidth(2)
+        
+        # Add compass rose
+        ax.text(0.95, 0.95, 'N', transform=ax.transAxes, fontsize=16, 
+            fontweight='bold', color='#2E8B57', alpha=0.8)
+    
+    # Add grid cells overlay if provided
     if grid_cells:
-        logger.info(f"   Adding {len(grid_cells)} grid cells...")
+        logger.info(f"   Adding {len(grid_cells)} grid cells overlay...")
         for cell in grid_cells:
             width = cell.get('max_lon', 0) - cell.get('min_lon', 0)
             height = cell.get('max_lat', 0) - cell.get('min_lat', 0)
@@ -234,8 +325,8 @@ def create_static_map(stations: List[Dict],
             rect = patches.Rectangle(
                 (cell.get('min_lon', 0), cell.get('min_lat', 0)),
                 width, height,
-                linewidth=0.5, edgecolor='blue', facecolor='lightblue', 
-                alpha=0.15, zorder=1
+                linewidth=0.8, edgecolor='#0066CC', facecolor='lightblue', 
+                alpha=0.2, zorder=2
             )
             ax.add_patch(rect)
     

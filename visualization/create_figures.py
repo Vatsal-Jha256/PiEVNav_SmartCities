@@ -157,12 +157,15 @@ def create_rl_performance_graphs():
     # Simulated data for 10 episodes
     episodes = np.arange(1, 11)
     
-    # UCB performance
-    ucb_rewards = [-150, -140, -130, -120, -110, -100, -95, -90, -88, -85]
+    # UCB performance (converting negative rewards to positive for clarity)
+    # Original: [-150, -140, -130, -120, -110, -100, -95, -90, -88, -85]
+    # Converting to positive scale: higher is better (adding 200 to make all positive)
+    ucb_rewards = [50, 60, 70, 80, 90, 100, 105, 110, 112, 115]
     ucb_coverage = [0.65, 0.70, 0.75, 0.80, 0.85, 0.88, 0.90, 0.91, 0.92, 0.92]
     
-    # Epsilon-Greedy performance
-    epsilon_rewards = [-160, -150, -135, -125, -115, -105, -98, -92, -88, -87]
+    # Epsilon-Greedy performance (converting to positive)
+    # Original: [-160, -150, -135, -125, -115, -105, -98, -92, -88, -87]
+    epsilon_rewards = [40, 50, 65, 75, 85, 95, 102, 108, 112, 113]
     epsilon_coverage = [0.60, 0.68, 0.73, 0.78, 0.83, 0.87, 0.89, 0.90, 0.91, 0.91]
     
     # Create figure with subplots
@@ -174,9 +177,9 @@ def create_rl_performance_graphs():
             label='UCB', color='#2E86AB')
     ax1.plot(episodes, epsilon_rewards, 's-', linewidth=2.5, markersize=8, 
             label='Epsilon-Greedy', color='#A23B72')
-    ax1.axhline(y=-85, color='green', linestyle='--', linewidth=1.5, alpha=0.7, label='Best Reward')
+    ax1.axhline(y=115, color='green', linestyle='--', linewidth=1.5, alpha=0.7, label='Best Reward')
     ax1.set_xlabel('Episode', fontsize=13, fontweight='bold')
-    ax1.set_ylabel('Reward', fontsize=13, fontweight='bold')
+    ax1.set_ylabel('Reward Score', fontsize=13, fontweight='bold')
     ax1.set_title('Reward Convergence Over Episodes', fontsize=14, fontweight='bold', pad=10)
     ax1.legend(loc='best', fontsize=11, frameon=True, fancybox=True, shadow=True)
     ax1.grid(True, alpha=0.3, linestyle='--')
@@ -197,22 +200,22 @@ def create_rl_performance_graphs():
     ax2.set_ylim(0.55, 0.95)
     ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: '{:.0%}'.format(y)))
     
-    # 3. Method Comparison (Bar Chart)
+    # 3. Method Comparison (Bar Chart) - using positive rewards
     methods = ['UCB', 'Epsilon-Greedy', 'Random', 'K-Means', 'Uniform']
-    final_rewards = [-85, -87, -150, -120, -140]
+    final_rewards = [115, 113, 50, 80, 60]  # Converted to positive scale
     colors = ['#2E86AB', '#A23B72', '#D32F2F', '#F57C00', '#7B1FA2']
     
     bars = ax3.bar(methods, final_rewards, color=colors, alpha=0.8, edgecolor='black', linewidth=1.5)
-    ax3.set_ylabel('Final Reward', fontsize=13, fontweight='bold')
+    ax3.set_ylabel('Final Reward Score', fontsize=13, fontweight='bold')
     ax3.set_title('Algorithm Performance Comparison', fontsize=14, fontweight='bold', pad=10)
     ax3.grid(True, alpha=0.3, axis='y', linestyle='--')
-    ax3.set_ylim(-160, -70)
+    ax3.set_ylim(0, 130)
     
     # Add value labels on bars
     for bar, reward in zip(bars, final_rewards):
         height = bar.get_height()
-        ax3.text(bar.get_x() + bar.get_width()/2., height - 5,
-                f'{reward:.0f}', ha='center', va='top', fontsize=11, fontweight='bold')
+        ax3.text(bar.get_x() + bar.get_width()/2., height + 2,
+                f'{reward:.0f}', ha='center', va='bottom', fontsize=11, fontweight='bold')
     
     # 4. Metrics Comparison
     metrics = ['Coverage\n(%)', 'Avg Distance\n(km)', 'Travel Time\n(min)', 'Spread\nScore']
@@ -231,14 +234,18 @@ def create_rl_performance_graphs():
     ax4.set_title('Performance Metrics Comparison', fontsize=14, fontweight='bold', pad=10)
     ax4.set_xticks(x)
     ax4.set_xticklabels(metrics, fontsize=10)
-    ax4.legend(loc='upper left', fontsize=11, frameon=True, fancybox=True, shadow=True)
+    # Move legend to upper right to avoid covering bars
+    ax4.legend(loc='upper right', fontsize=11, frameon=True, fancybox=True, shadow=True, 
+              bbox_to_anchor=(0.98, 0.98))
     ax4.grid(True, alpha=0.3, axis='y', linestyle='--')
     
-    # Add value labels
+    # Add value labels - adjust position to avoid legend overlap
     for bars in [bars1, bars2, bars3]:
         for bar in bars:
             height = bar.get_height()
-            ax4.text(bar.get_x() + bar.get_width()/2., height + 0.5,
+            # Position labels above bars, but check if they might overlap with legend
+            label_y = height + max(0.5, height * 0.05)  # Dynamic offset based on bar height
+            ax4.text(bar.get_x() + bar.get_width()/2., label_y,
                     f'{height:.1f}', ha='center', va='bottom', fontsize=9, fontweight='bold')
     
     plt.tight_layout(rect=[0, 0, 1, 0.97])
@@ -342,7 +349,7 @@ def create_system_architecture_diagram():
 
 
 def create_station_placement_map():
-    """Create station placement visualization"""
+    """Create station placement visualization with proper map overlay"""
     fig, ax = plt.subplots(figsize=(12, 10))
     
     # Bhubaneswar bounds
@@ -352,10 +359,52 @@ def create_station_placement_map():
     ax.set_xlim(min_lon, max_lon)
     ax.set_ylim(min_lat, max_lat)
     
-    # Background
-    ax.set_facecolor('#E8F5E9')
+    # Try to add map background overlay
+    map_background_added = False
     
-    # Grid cells (1km x 1km)
+    try:
+        import contextily as ctx
+        import requests
+        
+        # Test internet connectivity
+        try:
+            requests.get('https://tile.openstreetmap.org', timeout=3)
+            internet_available = True
+        except:
+            internet_available = False
+        
+        if internet_available:
+            map_sources = [
+                ('OpenStreetMap Mapnik', ctx.providers.OpenStreetMap.Mapnik),
+                ('CartoDB Positron', ctx.providers.CartoDB.Positron),
+            ]
+            
+            for source_name, source in map_sources:
+                try:
+                    ctx.add_basemap(ax, crs='EPSG:4326', source=source, 
+                                  alpha=0.6, zorder=0, attribution=False)
+                    map_background_added = True
+                    break
+                except Exception:
+                    continue
+    except ImportError:
+        pass
+    except Exception:
+        pass
+    
+    # Enhanced fallback background
+    if not map_background_added:
+        ax.set_facecolor('#E8F5E9')
+        
+        # Add subtle terrain effect
+        x = np.linspace(min_lon, max_lon, 100)
+        y = np.linspace(min_lat, max_lat, 100)
+        X, Y = np.meshgrid(x, y)
+        Z = np.sin(X * 50) * np.cos(Y * 50) * 0.1
+        ax.contourf(X, Y, Z, levels=20, alpha=0.1, cmap='terrain', zorder=0)
+        ax.grid(True, alpha=0.2, color='#2E8B57', linestyle='-', linewidth=0.3)
+    
+    # Grid cells overlay (1km x 1km) - enhanced visibility
     grid_size = 0.009  # ~1km in degrees
     for i in range(int((max_lat - min_lat) / grid_size) + 1):
         for j in range(int((max_lon - min_lon) / grid_size) + 1):
@@ -363,8 +412,8 @@ def create_station_placement_map():
             lon = min_lon + j * grid_size
             if lat <= max_lat and lon <= max_lon:
                 rect = Rectangle((lon, lat), grid_size, grid_size,
-                               linewidth=0.5, edgecolor='blue', 
-                               facecolor='lightblue', alpha=0.15)
+                               linewidth=0.8, edgecolor='#0066CC', 
+                               facecolor='lightblue', alpha=0.2, zorder=2)
                 ax.add_patch(rect)
     
     # Strategic stations (red squares)

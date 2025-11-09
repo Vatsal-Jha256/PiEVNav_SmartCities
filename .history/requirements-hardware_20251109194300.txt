@@ -1,0 +1,12 @@
+# Minimal Requirements for Hardware Demo on Raspberry Pi
+# Only includes dependencies needed for hardware control
+
+# Hardware control libraries
+RPi.GPIO>=0.7.0
+adafruit-circuitpython-ssd1306>=2.12.0
+adafruit-blinka>=8.0.0  # Provides board, busio for CircuitPython
+pillow>=9.0.0
+
+# Standard library dependencies (usually pre-installed, but listed for completeness)
+# No additional dependencies needed - uses only Python standard library
+

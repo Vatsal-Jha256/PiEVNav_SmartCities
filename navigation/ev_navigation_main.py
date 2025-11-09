@@ -10,11 +10,19 @@ import sys
 import logging
 import json
 from typing import Optional, Dict, List, Tuple
-from ev_navigation_hardware import EVNavigationHardware
-from ev_routing_algorithm import EVRoutingAlgorithm
 
-# Add project root to path
-sys.path.append(os.path.abspath('.'))
+# Add project root to path BEFORE imports
+# Get the directory containing this file
+current_dir = os.path.dirname(os.path.abspath(__file__))
+# Get project root (parent of navigation directory)
+project_root = os.path.dirname(current_dir)
+# Add to path if not already there
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+# Now import project modules
+from hardware.ev_navigation_hardware import EVNavigationHardware
+from navigation.ev_routing_algorithm import EVRoutingAlgorithm
 
 logging.basicConfig(
     level=logging.INFO,
