@@ -268,6 +268,8 @@ class EVNavigationSystem:
         
         self.hardware.display_message(status_msg)
         time.sleep(5)
+        # Ensure servo is stopped after showing status to prevent vibration
+        self.hardware.set_steering("STOP")
     
     def _find_nearest_station(self, location: Tuple[float, float]) -> Optional[Dict]:
         """Find nearest charging station to given location"""

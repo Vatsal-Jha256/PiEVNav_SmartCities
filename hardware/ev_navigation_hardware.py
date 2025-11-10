@@ -245,6 +245,8 @@ class EVNavigationHardware:
                 time.sleep(0.15)
                 self.servo.ChangeDutyCycle(7.5)  # Center
                 time.sleep(0.2)
+                # Stop servo to prevent vibration after menu selection
+                self.servo.ChangeDutyCycle(0)
             elif direction == "STATION_FOUND":
                 # Celebration movement when station found
                 for _ in range(2):
@@ -254,6 +256,8 @@ class EVNavigationHardware:
                     time.sleep(0.1)
                 self.servo.ChangeDutyCycle(7.5)  # Center
                 time.sleep(0.2)
+                # Stop servo to prevent vibration after celebration
+                self.servo.ChangeDutyCycle(0)
             elif direction == "STOP":
                 self.servo.ChangeDutyCycle(0)  # Stop
                 return
